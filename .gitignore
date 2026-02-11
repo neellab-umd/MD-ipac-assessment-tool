@@ -1,0 +1,30 @@
+# Specific file types
+*.md
+desktop.ini
+*.tmp
+~$*
+
+# Specific folders
+
+Assessments/
+Assessor_Completed_Ready_to_Merge/
+cache/
+combined_location_data/
+functions_for_data_prep/
+Heritage query files/
+IPAC_Assessment_Script_January_2026_files/
+not used/
+spatial_data/
+EDDMaps_location_data/
+GBIF_location_data/
+FIA_Data/
+
+# R-specific (commonly ignored)
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user
+.httr-oauth
+.DS_Store
+.quarto

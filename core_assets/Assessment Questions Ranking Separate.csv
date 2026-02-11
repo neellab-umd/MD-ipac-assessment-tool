@@ -1,0 +1,61 @@
+Question Number,Bold,Regular,Italic
+Q1,Impact on Ecosystem Processes and System-Wide Parameters,,
+Q1a,,"Does the species increase fire occurrence, frequency, or intensity in habitats that rarely support fire?",(A) yes (D) no
+Q1b,,Does the species alter water regimes in wetland systems?,(A) yes (D) no
+Q1c,,Does the species increase sedimentation rates?,(B) yes (D) no
+Q1d,,Does the species fix nitrogen?,(A) yes (D) no
+Q1e,,Is the species allelopathic?,(A) yes (D) no
+Q1f,,Does the species reduce light availability across most of the area it occupies?,(B) frequently reduces light (C) infrequently reduces light (D) no documented reduction
+Q1g,,Does the species influence soil nutrient availability or other soil qualities?,"(B) large influence on leaf litter decomposition rates, soil pH, soil microbiome, levels of nutrients, or other soil quality characteristics (C) perceivable but mild influence on soil nutrient availability (D) no documented influence"
+Q2,Impact on Ecological Community Structure,How does the species impact the structure of the vegetation layers?,"(A) creates, covers, or eliminates a vegetation layer (B) substantially changes layer density (C) moderately changes layer density (D) establishes within existing layers without significant changes to structure"
+Q3,Impact on Ecological Community Composition?,,
+Q3a,,Does the species reduce the population size of one or more locally common native species?,(A) extirpation/sharp reduction in abundance of several species (B) significant reduction in population sizes of several species (C) perceivable but mild reductions in population sizes of several species (D) no perceivable change in common native species
+Q3b,,Does the species facilitate significant increases in proportion of other non-native species?,"(A) documented population increases of associated non-native species (B) other non-native species are associated with the species, but no documentation of population increase (D) no"
+Q3c,,Does the species suppress seedling growth or recruitment of native successional/climax species?,"(A) suppresses seedlings in many environmental conditions (B) suppresses seedlings only within favorable environmental conditions such as early successional habitats, burns, wetlands, etc. (C) occasional or infrequent suppression, or limited data (D) no"
+Q4,Impact on Individual Native Plant or Animal Species,,
+Q4a,,Does the species strongly outcompete a particular native species or have other disproportionate or unusual impacts?,(A) causes extirpation/sharp reduction in population of a particular species (B) significantly reduces population of a particular species (C) occasionally reduces population of particular species (D) no disproportionate/unusual impact
+Q4b,,Does the species hybridize with a particular native species?,(A) readily hybridizes with native species (B) rarely hybridizes with native species (C) hybridization hypothesized based on close phylogenetic relationship with native species (D) no reports of hybridization or impacts
+Q4c,,Does the species parasitize a particular native species?,(A) readily parasitizes a native species (B) occasionally parasitizes a native species (C) rarely parasitizes a native species and impacts are minor (D) no
+Q4d,,Does the species poison a particular native species?,(A) contains toxins that are lethal to native species (B) contains toxins that moderately affect native species (C) contains toxins but infrequently consumed (D) no impact/reports
+Q4e,,Does the species host any disease that damages a particular native species?,(A) readily hosts fungal or bacterial pathogens (B) readily hosts viral pathogens (C) moderately susceptible to pathogens (D) no reports of disease that could impact native species
+Q4f,,Does the species attract pollinators away from native plants?,(B) reduces pollinator visitation to native plants (C) visited by pollinators but no evidence of reducing pollinator visitation to native plants (D) no
+Q5,Conservation Significance of the Communities and Native Species Threatened,,
+Q5a,,Does the species threaten native species that are state listed S1-S3?,(A) often threatens (B) occasionally threatens (C) rarely threatens (D) no documented risk
+Q5b,,Does the species threaten native species on the Federal Threatened or Endangered species list?,(A) often threatens (B) occasionally threatens (C) rarely threatens (D) no documented risk
+Q5c,,Does the species occur in ecological communities classified as important for biodiversity conservation by the Maryland Biodiversity Conservation Network (BioNet)?,"(A) occurs in Critically (Tier 1), Extremely (Tier 2), or Highly (Tier 3) significant areas for biodiversity conservation (B) occurs in areas ranked no higher than Moderately Significant (Tier 4) (C) occurs in areas ranked no higher than Significant (Tier 5) (D) occurs only in natural habitats that are un-ranked in BioNet"
+Q6,Current Range Size in Maryland,What percent of Maryland's land area is included in the species range within the state?,(A) >30% (B) 10-30% (C) 1-10% (D) <1% 
+Q7,Percentage of US Geological Survey Quadrangles with Species Invaded in Maryland,What percent of USGS quadrangles in Maryland are invaded by the species?,(A) >30% (B) 10-30% (C) 1-10% (D) <1% 
+Q8,Number of Biogeographic Units Invaded in Maryland,How many biogeographic provinces in Maryland are invaded by the species?,(A) 4-5 (B) 3 (C) 2 (D) 1
+Q9,Diversity of Natural Communities or Ecological Systems Invaded in Maryland,,
+Q9a,,How many FIA forest type groups have occurrences of the species in Maryland?,(A) 4 or more (B) 3 (C) 2 (D) 1
+Q9b,,How many NLCD cover types have occurrences of the species in Maryland?,(A) 4 or more (B) 3 (C) 2 (D) 1
+Q10,Long-Distance Dispersal Potential in Maryland?,,
+Q10a,,Is the species dispersed by human actions?,(A) commonly sold commercially or frequently spread by human activity (B) occasionally dispersed long distances by human activity (C) rarely dispersed by human activity; dispersed only short distances (D) not dispersed by humans
+Q10b,,Is the species dispersed by animals?,(A) long-range animal dispersal documented (B) localized animal dispersal (D) no
+Q10c,,Is the species dispersed by wind?,"(A) frequently more than 1 mile (B) occasionally 100 yds to 1 mile (C) infrequently, less than 100 yds (D) no"
+Q10d,,Is the species dispersed by water?, A) frequently; plants have distinct traits for hydrochory (B) occasionally; plants without distinct traits for hydrochory but have been documented dispersing by water (C) infrequently; short distances (D) no
+Q11,Inherent Ability to Establish in Mature Habitats,"Does the species establish in late-successional, mature native vegetation? ",(A) establishes in mature habitats (B) estabishes in mature habitats following minor disturbances (C) requires significant disturbance of mature habitat to establish (D) not known to spread significantly into mature native vegetation
+Q12,Established in Bordering States of Maryland,Is the species established in any of the jurisdictions bordering Maryland?,(A) established in 4-5 border jurisdictions (B) established in 2-3 border jurisdictions (C) established in 1 border jurisdiction (D) no
+Q13, Reproductive Characteristics,,
+Q13a,,"Does the species produce over 1,000 seeds or spores per plant annually",Y/N
+Q13b,,Do the seeds or spores remain viable in soil for three or more years?,Y/N
+Q13c,,Does the species reproduce more than once per year?,Y/N
+Q13d,,Is the species self-compatible?,Y/N
+Q13e,,Does the species grow more rapidly to reproductive maturity than most plants of its lifeform?,Y/N
+Q13f,,Does the species reproduce readily both vegetatively and by seed or spores?,Y/N
+Q13g,,Does the species have quickly spreading rhizomes or stolons that may root at nodes?,Y/N
+Q13h,,"Does the species resprout readily when broken, cut, grazed, or burned?",Y/N
+Q13i,,"Does the species fragment easily, with fragments capable of dispersing and establishing?",Y/N
+Q13j,,Does the species have other reproductive characteristics contributing to invasiveness?,Y/N
+Q14,General Management Difficulty,,
+Q14a,,Are there effective management strategies for controlling or eliminating infestations?,(A) no effective strategies for controlling or eliminating invasions (B) only one effective strategy for controlling or eliminating invasions (D) multiple effective strategies
+Q14b,,How difficult is it to manage the species?,(A) major investment for 5+ years (B) major investment for 2-4 years (C) minor investment for 1 year) (D) unnecessary
+Q14c,,Does the species resist herbicide or is it likely to develop a resistance?,(A) resists common herbicide(s) (D) no recorded resistance
+Q15,Resource Difficulty,What are the minimum resources necessary to control the species?  ,(A) licensed team of trained individuals (B) repeated manual treatment by managers/volunteers (C) cutting/hand-pulling seasonally (D) does not require extensive resources
+Q16,Accessibility of Invaded Areas,"Are infestations inaccessible for control methods (consider steep slopes, road access, remote shorelines, and private lands)?",(A) often invades inaccessible areas or requires removal from neighboring private lands due to dispersal (B) often invades habitat interiors with some accessibility concerns (C) invasion most often limited to more accessible disturbed environments and/or forest edges (D) accessibility issues insignificant
+Q17,Impacts on Human Health,Do infestations pose a threat to human health in any manner?,(A) major human health implications such as sickness or hospitalization (B) moderate human health implications such as cuts or rashes (C) minor human health implications such as minor skin reactions(D) none
+Q18,Impacts on Human Environment,,
+Q18a,,Do infestations change/limit recreational use of an area?,(A) creates an inaccessible environment (B) moderately impedes recreation (C) perceived impact on recreation such as scenic degradation or smell (D) no impact
+Q18b,,Does the taxon reduce crop yield or value?,(A) high probability of decreasing crop yield or value (B) moderate probability of decreasing crop yield or value (C) perceived or minor impacts to crop yield or value (D) does not reduce crop yield or value
+Q18c,,Does the taxon damage ornamental plants?,(B) commonly causes severe damage to ornamental plants (C) infrequently causes damage to ornamental plants D) no significant damage to ornamental plants
+Q18d,,Do infestations negatively impact personal property or public infrastructure?,(A) severe damage to infrastructure (B) moderate damage to infrastructure (C) infrequent or minor damage to infrastructure (D) insignificant impacts on infrastructure

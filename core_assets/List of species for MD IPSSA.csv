@@ -1,0 +1,98 @@
+species,Tier_2_year,genus_only,species_abb,authority,family,common_name,year,EddMapsID
+Acer platanoides,NA,NA,A. platanoides,L.,Sapindaceae,Norway maple,1753,3002
+Aegopodium podagraria,NA,NA,A. podagraria,L.,Apiaceae,Goutweed,1753,11534
+Ailanthus altissima,NA,NA,A. altissima,(Mill.) Swingle,Simaroubaceae,Tree-of-heaven,1916,3003
+Akebia quinata,NA,NA,A. quinata,(Thunb. ex Houtt.) Decne.,Lardizabalaceae,Chocolate vine,1839,10090
+Albizia julibrissin,NA,NA,A. julibrissin,Durazz.,Fabaceae,Mimosa/Silk tree,1772,3004
+Alliaria petiolata,NA,NA,A. petiolata,(M. Bieb.) Cavara & Grande,Brassicaceae,Garlic mustard,1913,3005
+Ampelopsis glandulosa,NA,NA,A. glandulosa,(Wall.) Momiy.,Vitaceae,Porcelain-berry,1971,78266
+Aralia elata,2020,NA,A. elata,(Miq.) Seem.,Araliaceae,Japanese angelica tree,1868,11536
+Arthraxon hispidus,NA,NA,A. hispidus,(Thunb.) Makino,Poaceae,Joint-head grass,1912,5136
+Arum italicum,NA,NA,A. italicum,Mill.,Araceae,Italian arum,1768,13931
+Berberis thunbergii,2020,NA,B. thunbergii,DC.,Berberidaceae,Japanese barberry,1821,3010
+Broussonetia papyrifera,NA,NA,B. papyrifera,(L.) Vent.,Moraceae,Paper mulberry,1799,5208
+Buddleja davidii,NA,NA,B. davidii,Franch.,Scrophulariaceae,Butterfly-bush,1888,11608
+Celastrus orbiculatus,NA,NA,C. orbiculatus,Thunb.,Celastraceae,Asian bittersweet,1784,3012
+Cenchrus purpurascens,NA,NA,C. purpurascens,Thunb.,Poaceae,Chinese fountain grass,1794,28488
+Centaurea stoebe,NA,NA,C. stoebe,L.,Asteraceae,Spotted knapweed,1753,3013
+Cirsium arvense,NA,NA,C. arvense,(L.) Scop.,Asteraceae,Canada thistle,1771,2792
+Clematis terniflora,NA,NA,C. terniflora,DC.,Ranunculaceae,Sweet autumn clematis,1817,5354
+Corydalis incisa,NA,NA,C. incisa,Pers.,Papaveraceae,Incised fumewort,1806,78096
+Cytisus scoparius,2017,NA,C. scoparius,(L.) Link,Fabaceae,Scotch broom,1822,4408
+Dioscorea polystachya,NA,NA,D. polystachya,Turcz.,Dioscoreaceae,Chinese yam,1837,4527
+Elaeagnus umbellata,NA,NA,E. umbellata,Thunb.,Elaeagnaceae,Autumn olive,1784,3021
+Epipactis helleborine,NA,NA,E. helleborine,(L.) Crantz,Orchidaceae,Broadleaf helleborine,1769,11976
+Euonymus alatus,2016,NA,E. alatus,(Thunb.) Siebold,Celastraceae,Winged burning bush,1830,3023
+Euonymus fortunei,NA,NA,E. fortunei,(Turcz.),Celastraceae,Wintercreeper,1933,3024
+Fatoua villosa,NA,NA,F. villosa,(Thunb.),Moraceae,Mulberry-weed,1927,5639
+Ficaria verna,NA,NA,F. verna,Huds.,Ranunculaceae,Fig buttercup,1762,3069
+Geranium lucidum,NA,NA,G. lucidum,L.,Geraniaceae,Shining cranesbill,1753,14069
+Glechoma hederacea,NA,NA,G. hederacea,L.,Lamiaceae,Ground Ivy,1753,3026
+Hedera helix,NA,TRUE,H. helix,L.,Araliaceae,English Ivy,1753,3027
+Hedera hibernica,NA,TRUE,H. hibernica,Poit.,Araliaceae,Atlantic Ivy,1835,18746
+Hemerocallis fulva,NA,NA,H. fulva,(L.) L.,Asphodelaceae,Orange daylily,1762,3407
+Heracleum mantegazzianum,NA,NA,H. mantegazzianum,Sommier & Levier,Apiaceae,Giant hogweed,1895,4536
+Hesperis matronalis,NA,NA,H. matronalis,L.,Brassicaceae,Dame's rocket,1753,5702
+Humulus japonicus,NA,NA,H. japonicus,Siebold & Zucc.,Cannabaceae,Japanese hop,1846,10091
+Hyacinthoides hispanica,NA,NA,H. hispanica,(Mill.) Rothm.,Asparagaceae,Spanish bluebells,1944,36034
+Hydrilla verticillata,NA,NA,H. verticillata,(L. f.) Royle,Hydrocharitaceae,Waterthyme,1839,3028
+Kalopanax septemlobus,NA,NA,K. septemlobus,Koidz.,Araliaceae,Castor-aralia,1925,28071
+Lamium galeobdolon,NA,NA,L. galeobdolon,(L.) L.,Lamiaceae,Yellow archangel,1759,14085
+Lespedeza cuneata,NA,NA,L. cuneata,(Dum.Cours.) G. Don,Fabaceae,Sericea lespedeza,1832,3033
+Leucojum aestivum,NA,NA,L. aestivum,L.,Amaryllidaceae,Summer-snowflake,1759,51015
+Ligustrum obtusifolium,2016,NA,L. obtusifolium,Siebold & Zucc.,Oleaceae,Border privet,1846,10087
+Ligustrum ovalifolium,NA,TRUE,L. ovalifolium,Hassk.,Oleaceae,Garden privet,1844,11561
+Ligustrum sinense,NA,TRUE,L. sinense,Lour.,Oleaceae,Chinese privet,1790,3035
+Ligustrum vulgare,NA,TRUE,L. vulgare,L.,Oleaceae,European privet,1753,3036
+Lonicera japonica,NA,NA,L. japonica,Thunb.,Caprifoliaceae,Japanese honeysuckle,1784,3039
+Lonicera maackii,NA,NA,L. maackii,(Rupr.) Maxim.,Caprifoliaceae,Amur honeysuckle,1859,3040
+Lonicera morrowii,NA,NA,L. morrowii,A.Gray,Caprifoliaceae,Morrow's honeysuckle,1857,3041
+Lythrum salicaria,NA,NA,L. salicaria,L.,Lythraceae,Purple loosestrife,1753,3047
+Mahonia bealei,NA,NA,M. bealei,(Fortune) Carrire,Berberidaceae,Leatherleaf mahonia,1855,6889
+Microstegium vimineum,NA,NA,M. vimineum,(Trin.) A.Camus,Poaceae,Japanese stiltgrass,1922,3051
+Miscanthus sinensis,NA,NA,M. sinensis,Andersson,Poaceae,Chinese silvergrass,1855,3052
+Morus alba,NA,NA,M. alba,L.,Moraceae,White mulberry,1753,6050
+Murdannia keisak,NA,NA,M. keisak,(Hassk.) Hand.-Mazz.,Commelinaceae,Marsh dewflower,1936,3053
+Myriophyllum aquaticum,NA,NA,M. aquaticum,(Vell.) Verdc.,Haloragaceae,Parrot-feather,1973,3054
+Myriophyllum spicatum,NA,NA,M. spicatum,L.,Haloragaceae,Eurasian watermilfoil,1753,3055
+Nandina domestica,2017,NA,N. domestica,Thunb.,Berberidaceae,Nandina,1784,3057
+Oplismenus undulatifolius,NA,NA,O. undulatifolius,(Ard.) P.Beauv,Poaceae,Wavyleaf basketgrass,1812,79593
+Ornithogalum nutans,NA,NA,O. nutans,L.,Asparagaceae,Nodding star-of-bethlehem,1753,14152
+Ornithogalum umbellatum,NA,NA,O. umbellatum,L.,Asparagaceae,Common star-of-bethlehem,1753,6109
+Paulownia tomentosa,NA,NA,P. tomentosa,(Thunb.) Steud.,Paulowniaceae,Princess tree/Empress Tree,1841,2426
+Perilla frutescens,NA,NA,P. frutescens,(L.) Britton,Lamiaceae,Beefsteak plant,1894,3413
+Persicaria filiformis,NA,NA,P. filiformis,(Thunb.) Nakai,Polygonaceae,Asian jumpseed,1919,157947
+Persicaria perfoliata,NA,NA,P. perfoliata,(L.) H.Gross,Polygonaceae,Mile-a-minute,1913,3065
+Phellodendron amurense,NA,NA,P. amurense,Rupr.,Rutaceae,Amur corktree,1857,11569
+Phragmites australis ssp. australis,NA,NA,P. australis,(Cav.) Trin. ex Steud.,Poaceae,European common reed,1840,59038
+Phyllostachys aurea,2018,NA,P. aurea,Carriere ex A.Riviere & C.Riviere,Poaceae,Golden bamboo,1878,3063
+Phyllostachys aureosulcata,2018,NA,P. aureosulcata,McClure,Poaceae,Yellow groove bamboo,1945,55473
+Phyllostachys bissetii,NA,NA,P. bissetii,McClure,Poaceae,Bisset bamboo,1956,61227
+Potentilla indica,NA,NA,P. indica,(Andrews) Th.Wolf,Rosaceae,Mock strawberry,1904,78283
+Pseudosasa japonica,NA,NA,P. japonica,Makino ex Nakai,Poaceae,Arrow bamboo,1925,3067
+Pueraria montana,NA,NA,P. montana,(Lour.) Merr.,Fabaceae,Kudzu,1935,2425
+Pyrus calleryana,2018,NA,P. calleryana,Decne.,Rosaceae,Callery pear,1872,10957
+Quercus acutissima,NA,NA,Q. acutissima,Carruth.,Fagaceae,Sawtooth oak,1861,10086
+Reynoutria japonica,NA,NA,R. japonica,Houtt.,Polygonaceae,Japanese knotweed,1777,19655
+Rhodotypos scandens,NA,NA,R. scandens,(Thunb.) Makino,Rosaceae,Jetbead,1913,6891
+Rosa multiflora,NA,NA,R. multiflora,Thunb.,Rosaceae,Multiflora rose,1784,3071
+Rubus phoenicolasius,NA,NA,R. phoenicolasius,Maxim.,Rosaceae,Wineberry,1872,3072
+Salvinia molesta,NA,NA,S. molesta,D.S.Mitch.,Salviniaceae,Giant salvinia,1972,2785
+Schoenoplectiella mucronata,NA,NA,S. mucronata,(L.) J.Jung & H.K.Choi,Cyperaceae,Bog bulrush,2010,78763
+Spiraea japonica,NA,NA,S. japonica,L.,Rosaceae,Japanese meadowsweet,1782,3076
+Tetradium daniellii,2018,NA,T. daniellii,(Benn.) T.G. Hartley,Rutaceae,Bee bee tree,1981,25324
+Trapa bispinosa,NA,NA,T. bispinosa,Roxb.,Trapaceae,Two-horned water chestnut,1815,104723
+Trapa natans,NA,NA,T. natans,L.,Trapaceae,Eurasian water chestnut,1753,3499
+Tripidium ravennae,NA,NA,T. ravennae,(L.) H.Scholz,Poaceae,Ravenna grass,2006,60259
+Urtica dioica,NA,NA,U. dioica,L.,Urticaceae,European stinging nettle,1753,6569
+Viburnum dilatatum,NA,NA,V. dilatatum,Thunb.,Viburnaceae,Linden viburnum,1784,10123
+Viburnum plicatum,NA,NA,V. plicatum,Thunb.,Viburnaceae,Japanese snowball,1794,11533
+Viburnum setigerum,NA,NA,V. setigerum,Hance,Viburnaceae,Tea viburnum,1882,22589
+Viburnum sieboldii,NA,NA,V. sieboldii,Miq.,Viburnaceae,Siebold viburnum,1866,11532
+Vinca minor,NA,NA,V. minor,L.,Apocynaceae,Common periwinkle,1753,3081
+Vinca major,NA,,V. major,L.,Apocynaceae,Big periwinkle,1753,4528
+Vincetoxicum nigrum,NA,NA,V. nigrum,Moench,Apocynaceae,Black swallow-wort,1802,3398
+Vincetoxicum rossicum,NA,NA,V. rossicum,(Kleopow) Barbar.,Apocynaceae,Pale swallow-wort,1950,4260
+Wisteria floribunda,2016,TRUE,W. floribunda,(Willd.) DC.,Fabaceae,Japanese wisteria,1825,3082
+Wisteria sinensis,2016,TRUE,W. sinensis,(Sims) DC.,Fabaceae,Chinese wisteria,1825,3083
+Wisteria x formosa,2016,TRUE,W. x formosa,Rehder,Fabaceae,Hybrid Asian wisteria,1922,20868

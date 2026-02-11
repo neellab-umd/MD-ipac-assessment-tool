@@ -1,0 +1,1080 @@
+---
+params:
+  species: "Berberis thunbergii"
+  species_abb: "B. thunbergii"
+  authority: "DC."
+  family: "Berberidaceae"
+  common_name: "Japanese barberry"
+  genus_only: false
+  mode: "generate" #alternative is merge
+  assessor_file: null
+  intro_files: null
+
+editor: source
+
+---
+
+```{r}
+#| label: load_packages
+#| message: false
+
+## Need to load conflicted first before pacman and other packages
+
+if (!require("conflicted")) install.packages("conflicted")
+library(conflicted)
+
+conflicts_prefer(
+  dplyr::filter,
+  dplyr::select,
+  terra::extract, 
+  terra::area,
+  raster::trim,
+  flextable::compose,
+  flextable::align)
+
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(dbscan,
+               english,
+               extrafont,
+               docxtractr,
+               flextable,
+               ggrepel,
+               ggspatial,
+               ggtext,
+               ggthemes,
+               glue,
+               gridExtra,
+               gt,
+               here,
+               lwgeom,
+               magrittr,
+               officer,
+               paletteer,
+               patchwork,
+               purrr,
+               quarto,
+               raster,
+               viridis,
+               scales,
+               sf,
+               spData,
+               showtext,
+               terra,
+               tidyterra,
+               tidyverse,
+               tigris,
+               update = FALSE
+               )
+
+
+# Set encoding options for Windows
+options(encoding = "UTF-8")
+invisible(Sys.setlocale("LC_CTYPE", "English_United States.UTF-8"))
+
+## Load Aptos Font
+extrafont::loadfonts(device = "win")
+
+
+##Set up border size to make bottom table border the same width as the top
+thick_border <- officer::fp_border(color = "black", width = 1.5)
+
+## Source functions
+if(!exists("map_combined_distributions", mode="function"))
+  source(here::here("functions", "Create_Intro_Info_Maps.R"))
+
+if(!exists("mcp_calculation", mode="function"))
+  source(here::here("functions", "Minimum_Convex_Polygon_Function.R"))
+
+if(!exists("BioNet_Intersect", mode="function"))
+  source(here::here("functions", "Intersect_BioNet_Function.R"))
+
+if(!exists("Province_Intersect", mode="function"))
+  source(here::here("functions", "Intersect_Province_Function.R"))
+
+if(!exists("Quad_Density_Intersect", mode="function"))
+  source(here::here("functions", "Intersect_Quad_Density_Function.R"))
+
+if(!exists("Forest_Intersect", mode="function"))
+  source(here::here("functions", "Intersect_FIA_Forest_Type_Function.R"))
+
+if(!exists("NLCD_Intersect", mode="function"))
+  source(here::here("functions", "Intersect_NLCD_Function.R"))
+
+if(!exists("format_question_flextable", mode="function"))
+  source(here::here("functions", "Question_Flextable_Format_Function.R"))
+
+if(!exists("populate_question_flextable", mode="function"))
+  source(here::here("functions", "Question_Flextable_Populate_Function.R"))
+
+if(!exists("Question_Evidence", mode="function"))
+  source(here::here("functions", "Question_Evidence_Text.R"))
+
+if(!exists("merge_word_evidence", mode="function"))
+  source(here::here("functions", "Merge_From_Word_Function.R"))
+
+if(!exists("build_appendix_table", mode="function"))
+  source(here::here("functions", "Build_Appendix_Flextable.R"))
+
+```
+
+```{r}
+#| label: custom.question.body.fonts
+
+## Read in all question text and set up the table format for the question tables.
+
+all.questions.parsed <- read_csv(here("core_assets","Assessment Questions Ranking Separate.csv"), locale = readr::locale(encoding = "UTF-8")) # deals with formatting caused by converting word table to Excel
+
+all.questions.parsed <- all.questions.parsed %>%
+  mutate(across(where(is.character),
+                ~ gsub("\u00A0", " ", .x, fixed = TRUE))) #removes problematic hidden formatting from word.
+
+## Create Question Number Scaffold for Tables - the question text, evidence, and grades are linked to these numbers
+
+question_scaffold <- all.questions.parsed %>%
+  dplyr::mutate(
+    `Body of Questions/Subquestions` = NA_character_,
+    Grade = NA_character_,
+    `Supporting Evidence` = NA_character_
+  ) %>%
+  dplyr::select(
+    `Question Number`,
+    `Body of Questions/Subquestions`,
+    Grade,
+    `Supporting Evidence`
+  )
+
+# Function to create one as_paragraph per row
+make_paragraph <- function(bold_text, regular_text, italic_text = NULL) {
+  parts <- list()
+
+  # bold section
+  if (!is.na(bold_text) && bold_text != "") {
+    parts <- append(parts, list(
+      flextable::as_chunk(bold_text, props =
+                            officer::fp_text(bold = TRUE, 
+                                             font.size = 11,
+                                             font.family = "Aptos"))
+    ))
+  }
+
+  # two newlines before regular text if bold exists
+  if (!is.na(regular_text) && regular_text != "") {
+    if (length(parts) > 0) {
+      parts <- append(parts, list(flextable::as_chunk("\n\n")))
+    }
+    parts <- append(parts, list(
+      flextable::as_chunk(regular_text, 
+                          props = officer::fp_text(font.size = 11,
+                                                   font.family = "Aptos"))
+    ))
+  }
+
+  # optional italic section with another line break
+  if (!is.na(italic_text) && italic_text != "") {
+    parts <- append(parts, list(flextable::as_chunk("\n\n")))
+    parts <- append(parts, list(
+      flextable::as_chunk(italic_text, 
+                          props = officer::fp_text(italic = TRUE, 
+                                                   font.size = 11,
+                                                   font.family = "Aptos"))
+    ))
+  }
+
+  # create the paragraph using all chunks
+  do.call(flextable::as_paragraph, parts)
+}
+
+# Build the named list automatically
+custom_bodies <- all.questions.parsed %>%
+  dplyr::mutate(
+    paragraph = purrr::pmap(
+      list(Bold, Regular, Italic),
+      make_paragraph
+    )
+  ) %>%
+  dplyr::select(q = `Question Number`, paragraph) %>%
+  tibble::deframe()  # converts 2-column tibble to a named list
+
+# Build list automatically
+custom_bodies <- all.questions.parsed %>%
+  # create a list-column called paragraph (one paragraph object per row)
+  mutate(paragraph = pmap(list(Bold, Regular, Italic), make_paragraph)) %>%
+  # select only the question id and the paragraph
+  select(q = `Question Number`, paragraph) %>%
+  # deframe turns a 2-col tibble into a named list: names from q, values from paragraph
+  deframe()
+
+```
+
+```{r}
+#| label: handle_species_name
+
+## This block takes the species information from the Running_Quarto_Script and runs with it to handle multi-species assessments.
+
+## Helper function to format species list with "and" for genus level searches
+format_list_with_and <- function(items) {
+  n <- length(items)
+  if (n == 1) {
+    return(items)
+  } else if (n == 2) {
+    return(paste(items, collapse = " and "))
+  } else {
+    return(paste0(paste(items[-n], collapse = ", "), ", and ", items[n]))
+  }
+}
+
+# Read species info for genus-level details
+all_species_info <- read_csv(here("core_assets","List of species for MD IPSSA.csv"), show_col_types = FALSE)
+
+if (params$genus_only) {
+  #  Create the dataframe with all species in the genus, which you use later in the loop
+  species_details <- all_species_info %>%
+    filter(str_detect(species, paste0("^", params$species, " ")))
+  
+  # Create formatted display for SPECIES line with common names
+  species_list_display <- species_details %>%
+    mutate(formatted = paste0("*", species, "* ", authority, " (", common_name, ")")) %>%
+    pull(formatted) %>%
+    format_list_with_and()
+  
+  # Create simple species list (just scientific names in italics)
+  species_list_simple <- species_details %>%
+    mutate(formatted = paste0("*", species, "*")) %>%
+    pull(formatted) %>%
+    format_list_with_and()
+  
+  # Create list of just common names for COMMON NAMES line
+  common_name_list <- species_details %>%
+    pull(common_name) %>%
+   format_list_with_and()
+  
+  # Override params with genus-level info
+  species_abb <- params$species
+  authority <- ""
+  common_name <- common_name_list
+  family <- species_details$family[1]
+  species_name <- params$species
+  tier_2_year <- species_details$Tier_2_year[1]
+  
+  # Load all intro info files for the each species to get synonyms and generate maps
+  all_intro_info <- list()
+  for (i in seq_along(params$intro_files)) {
+    # Create a temporary environment to avoid overwriting
+    temp_env <- new.env()
+    load(params$intro_files[i], envir = temp_env)
+    # Store it under the species name
+    species_key <- species_details$species[i]
+    all_intro_info[[species_key]] <- temp_env$intro_info_list
+  }
+  
+} else {
+  # Single species - just use params directly
+  species_abb <- params$species_abb
+  authority <- params$authority
+  common_name <- params$common_name
+  family <- params$family
+  species_name <- params$species
+  
+  # Get tier 2 year for this species
+  tier_2_year <- all_species_info %>%
+    filter(species == species_name) %>%
+    pull(Tier_2_year)
+  
+  # Load the single intro file
+  temp_env <- new.env()
+  load(params$intro_files, envir = temp_env)  # Remove [1] - it should be a single string
+  
+  # Check if intro_info_list exists in temp_env
+  if (!"intro_info_list" %in% names(temp_env)) {
+    stop("intro_info_list not found in loaded file: ", params$intro_files)
+  }
+  
+  # For consistency, wrap in a list
+  all_intro_info <- list()
+  all_intro_info[[species_name]] <- temp_env$intro_info_list
+  
+  # Debug: verify it was created
+  if (length(all_intro_info) == 0 || is.null(all_intro_info[[species_name]])) {
+    stop("Failed to create all_intro_info for species: ", species_name)
+  }
+}
+```
+
+```{r}
+#| label: load_location_data
+#| echo: false
+## Load files using file_safe_name
+
+# Create file_safe_name once for all uses
+file_safe_name <- str_replace_all(species_name, " ", "_")
+
+## occurrence location data
+load(paste0("./combined_location_data/Points_sf_", 
+            file_safe_name, ".RData"))
+
+search_date <- as.Date(readLines(paste0("./GBIF_location_data/gbif_search_date_",
+                                        file_safe_name, ".txt")))
+
+```
+
+
+```{r}
+#| label: run_all_queries_and_functions
+
+BioNet_Output <- BioNet_Intersect(species_name = file_safe_name)
+
+mcp <- mcp_calculation(species_name = file_safe_name)
+
+quad_density <- Quad_Density_Intersect(species_name = file_safe_name)
+
+province <- Province_Intersect(species_name = file_safe_name)
+
+points_fia_extract <- Forest_Intersect(species_name = file_safe_name)
+
+points_nlcd_extract <- NLCD_Intersect(species_name = file_safe_name)
+
+## generate all the text for the evidence in different questions
+evidence_list <- Question_Evidence()
+
+# Conditionally merge assessor evidence based on mode
+if (params$mode == "merge" && file.exists(params$assessor_file)) {
+  evidence_list <- merge_word_evidence(params$assessor_file, evidence_list, 
+                                       species_name, species_abb)
+
+} else {
+    warning("Assessor file not found: ", params$assessor_file)
+  }
+
+# Conditionally build appendix table based on mode
+
+if (params$mode == "merge") {
+  final.scores <- build_appendix_table()
+} else {
+  # Create empty placeholder
+  final.scores <- list(
+    appendix.table = NULL,
+    inline.scores = list()
+  )
+}
+```
+
+```{r}
+#| label: create_question_flextables
+
+# Create all four question flextables
+
+ft.1.to.5 <- populate_question_flextable(1:5, custom_bodies, evidence_list)%>%
+# Apply background colors
+  flextable::bg(i = ~ grepl("[0-9]$", `Question Number`), bg = "#77B366") %>%
+  flextable::bg(i = ~ !grepl("[0-9]$", `Question Number`), bg = "#B7DAA2")
+
+ft.6.to.9 <- populate_question_flextable(6:9, custom_bodies, evidence_list) %>%
+# Apply background colors
+  flextable::bg(i = ~ grepl("[0-9]$", `Question Number`), bg = "#d18ed2") %>% 
+  flextable::bg(i = ~ !grepl("[0-9]$", `Question Number`), bg = "#f3dbf3") 
+
+ft.10.to.13 <- populate_question_flextable(10:13, custom_bodies, evidence_list)  %>%
+# Apply background colors
+  flextable::bg(i = ~ grepl("[0-9]$", `Question Number`), bg = "#22cde4", part = "body") %>% 
+  flextable::bg(i = ~ !grepl("[0-9]$", `Question Number`), bg = "#94e4f0", part = "body")  
+
+ft.14.to.18 <- populate_question_flextable(14:18, custom_bodies, evidence_list) %>% 
+# Apply background colors
+  flextable::bg(i = ~ grepl("[0-9]$", `Question Number`), 
+     bg = "#F2B591") %>%  # dark green
+  flextable::bg(i = ~ !grepl("[0-9]$", `Question Number`),
+     bg = "#F9DFCA")   
+
+
+```
+
+::: {custom-style="centered"}
+![](MDALogo.png)
+:::
+
+::: {custom-style="IPACTitle11"}
+Maryland Department of Agriculture\
+`r format(Sys.Date(), "%B %d, %Y")`\
+Version 2\
+:::
+
+::: {custom-style="IPACTitleBold"}
+`r if (params$mode == "generate") paste0("Assessor Draft\n")`
+:::
+
+::: {custom-style="IPACTitleBold"}
+Invasive Plant Species Status Assessment for \
+`r if (params$genus_only) species_list_display else paste0("*", species_name, "* ", authority, " (", family,") -- ", common_name)`
+:::
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+
+::: {custom-style="IPACTitleLarge"}
+Agency Contact
+:::
+
+
+::: {custom-style="IPACTitle11"}
+Office of Plant Protection and Weed Management\
+Maryland Department of Agriculture\
+50 Harry S. Truman Pkwy\
+Annapolis, Maryland   21401\
+Telephone: (410)-841-5870
+:::
+
+```{r}
+#| output: asis
+#| echo: false
+
+## This code chunk forces the page numbering to start at 1 on the first page of the text while leaving the title page unnumbered.
+
+cat('```{=openxml}\n')
+cat('<w:p>\n') # This is a paragraph 
+cat('  <w:pPr>\n') # Here are the paragraph's properties
+cat('    <w:sectPr>\n') #And this paragraph marks the END of a section
+cat('      <w:footerReference w:type="default" r:id="rId7"/>\n') #section properties 
+cat('      <w:pgNumType w:start="1"/>\n') #Including page numbering settings
+cat('    </w:sectPr>\n')
+cat('  </w:pPr>\n')
+cat('</w:p>\n')
+cat('```\n')
+```
+
+# 1. Introduction
+
+## Background of the Invasive Plant Species Status Assessment Protocol
+
+The Maryland Department of Agriculture regulates invasive plants under Maryland Code, Agriculture 9.5 (§§ 9.5-101–9.5-306). An invasive plant is defined under the statute as, “any living part of a plant species or its subspecies that: (i) Did not evolve in the State; and (ii) If introduced to within the State, will cause or is likely to cause, as determined by the Secretary: economic harm, ecological harm, environmental harm, or harm to human health.”
+
+Maryland’s Invasive Plants Advisory Committee (IPAC) was established by the statute to advise the Secretary of Agriculture on regulating the sale of invasive plants and preventing them from entering Maryland or from spreading further in the state. The IPAC evaluates the invasive status of plants present in Maryland, and the risk potential of plants that are not yet established in the state.
+
+The IPAC is required to evaluate the invasiveness of plants using an assessment tool based on NatureServe's Invasive Species Assessment Protocol (Morse et al. 2004). NatureServe’s protocol assesses species at a statewide geographic scale using scientific information about each species’ ecological impact, current distribution, and trends in distribution along with information from standard practice regarding management difficulty to assign it an Invasiveness Rank (I-Rank) of (A) High (B) Medium (C) Low, or (D) Insignificant. The I-Rank is calculated from a species’ classification in four different categories (called subranks) using the same (A), (B), (C), and (D) classifications. Subranks are determined by responses to one or more questions that are answered using the same (A), (B), (C), and (D) classifications. A more detailed explanation of the protocol methodology can be found in Morse (et al. 2004).
+
+The IPAC modified the NatureServe protocol to provide a more objective assessment that better addresses the needs of Maryland by rephrasing, adding, or removing certain questions. Some questions were broken into subquestions to better account for multiple issues that were conflated in the original protocol. The adapted protocol also uses species location data from multiple open access databases to assess the geographic extent of the species’ invasion in Maryland and neighboring states and the ecological extent in Maryland. The adapted protocol is referred to as the Invasive Plant Species Status Assessment Protocol.
+
+I-Ranks determined from the assessment protocol are used to advise the Secretary on which species to classify as prohibited invasive plants on the Consolidated List of Maryland Invasive Plant Species. Species that are assigned an I-Rank of (A) High or (B) Medium are advised to be classified as a prohibited invasive plant by the Secretary. Species that are assigned an I-Rank of (C) Low or (D) Insignificant are recommended for placement on the Watch List and can be reevaluated if conditions change.
+
+{{< pagebreak >}}
+
+## Assessed Species Information
+```{r}
+#| label: species-header-info
+#| results: asis
+#| echo: false
+
+if (params$genus_only) {
+  cat("Due to similarity of appearance, this assessment covers the following species in genus *", params$species, 
+      "* in the plant family ", family, ". Synonyms for each species were sourced from the Trefle global plant database (https://docs.trefle.io/). Worldwide country distributions are based on Global Biodiversity Information Facility (GBIF) observations of non-cultivated plants. State distributions within the U.S are based on GBIF and iNaturalist observations. The native range was obtained from the Trefle global plant database (https://trefle.io/). Native ranges reported as floristic or historic regions were expanded to constituent modern countries following Taxonomic Data Working Group (2001) standards. \n\n", sep = "")
+  
+  cat(paste0("**INITIATION:** The *", species_name, "* species were listed in Maryland as Tier 2 invasive plants in ", tier_2_year, ". They are being re-evaluated in accordance with Maryland Code, Agriculture Title 9.5 (§§ 9.5-101–9.5-306).\n\n"))
+} 
+```
+
+```{r}
+#| label: species-synonyms-and-maps
+#| warning: false
+#| message: false
+#| fig-height: 3
+#| fig-width: 6.5
+#| results: asis
+
+if (params$genus_only) {
+  # Loop through each species in the genus
+  for (sp_name in names(all_intro_info)) {
+    sp_intro <- all_intro_info[[sp_name]]
+    
+    # Get the formatted species info from species_details
+    sp_info <- species_details %>%
+      filter(species == sp_name)
+    
+    # Print species header
+    cat("**SPECIES** *",sp_name,"* ",sp_info$authority, " (", sp_info$common_name, ")\n\n", sep = "")
+    cat("**SYNONYMS:** ", paste(sort(sp_intro$synonyms), collapse = ", "), "\n\n", sep = "")
+    cat("**FOREIGN AND U.S. DISTRIBUTIONS:**\n")
+    
+    # Create and show map
+    maps <- map_combined_distributions(sp_intro)
+    print(maps$combined_plot)
+    
+    cat("\n\n")
+  }
+} else {
+  # Single species - define sp_intro from all_intro_info
+  sp_intro <- all_intro_info[[species_name]]
+  
+  cat("**SPECIES:** *",species_name,"* ", authority, " (", common_name, ")\n\n", sep = "")
+  cat("**FAMILY:** ", family, "\n\n", sep = "")
+  cat(paste0("**INITIATION:** *", species_name, "* was listed in Maryland as a Tier 2 invasive plant in ", tier_2_year, ". The species is being re-evaluated in accordance with Maryland Code, Agriculture Title 9.5 (§§ 9.5-101–9.5-306).\n\n"))
+  cat("**SYNONYMS[^1]:** ", paste(sort(sp_intro$synonyms), collapse = ", "), "\n\n", sep = "")
+  cat("**FOREIGN AND U.S. DISTRIBUTIONS[^2]:**\n")
+  
+  maps <- map_combined_distributions(sp_intro)
+  print(maps$combined_plot)
+}
+
+```
+
+[^1]: Sourced from the Trefle global plant database (https://docs.trefle.io/). 
+
+[^2]: Worldwide country distributions are based on Global Biodiversity Information Facility (GBIF) observations of non-cultivated plants. State distributions within the U.S are based on GBIF and iNaturalist observations. The native range was obtained from the Trefle global plant database (https://trefle.io/). Native ranges reported as floristic or historic regions were expanded to constituent modern countries following Taxonomic Data Working Group (2001) standards.
+
+{{< pagebreak >}}
+
+
+# 2. Methods
+
+## Using the Invasive Plant Species Status Assessment Protocol
+
+To begin the assessment, an expert assessor performs a search of scientific literature to answer questions addressing four categories of information about invasiveness that form the four sections of this protocol: ecological impact (5 questions), current distribution and abundance (4 questions), trend in distribution and abundance (4 questions), and management difficulty and human impacts (5 questions). Many of these questions have subquestions. Most questions are answered based on scientific literature but some rely on documented feasibility and success of management practices. Questions relating to geographic and ecological distribution of the species are answered using location data as described in the following section.
+
+The assessor then uses the rating system given for each question or subquestion to assign a grade of (A) High, (B) Medium, (C) Low, (D) Insignificant, or (U) Unknown. The grades from subquestions are used to assign a grade to their associated question. Typically, the grade assigned to the question is the highest of its subquestion grades. An exception to this rule is question 13, in which subquestions are answered as yes (Y) or no (N). The grade for this question is based on the number of subquestions that are answered yes: four or more yes answers results in (A) High, three results in (B) Medium, two results in (C) Low, and one or zero yes answers would result in (D) Insignificant.
+
+Within questions and subquestions, points are assigned to grades of (A) High, (B) Medium, (C) Low, and (D) Insignificant in a 3:2:1:0 ratio, respectively. Additionally, point values for each question are weighted such that questions with more bearing on invasiveness are worth more points. The potential point values assigned from question grades are provided in Appendix Table 1.
+
+Once the questions are graded, their points are summed within each of the four sections to yield a subrank grade that can be considered as an overall grade for each section. These grades have the same classifications of (A) High, (B) Medium, (C) Low, and (D) Insignificant. Subrank grades have associated point values that are weighted based on their impact on invasiveness. Within a subrank, points are allocated on a 3:2:1:0 ratio for (A) High, (B) Medium, (C) Low, and (D) Insignificant, respectively. Details on the possible subrank grades are given in Appendix Table 1. The sum of the four subrank point scores determines the I-Rank.
+
+The I-Rank is on a 100 point scale that reflects the invasive potential of the species in Maryland. Species that score 76-100 points are considered (A) High, 51-75 points are considered (B) Medium, 26-50 points are considered (C) Low, and 0-25 points are considered (D) Insignificant. Species that receive an I-Rank of (A) High or (B) Medium are recommended to the Maryland Department of Agriculture Secretary to be listed as Prohibited Invasive plants. Species that receive an I-Rank of (C) Low or (D) Insignificant” are recommended to the Secretary as additions to the Watch List.
+
+## Analysis of Geographic and Ecological Distribution
+
+Multiple questions in the assessment protocol require quantifying the species' geographic and ecological distributions. These questions are addressed using georeferenced records from four public biodiversity databases: The Global Biodiversity Information Facility (GBIF), iNaturalist, USDA Forest Inventory Analysis (FIA) plots, and the Early Detection and Distribution Mapping System (EDDMapS). To focus on plants outside of cultivation, GBIF and EDDMapS records are filtered to remove any recorded as *living specimens* in the *basisofrecord* field, and iNaturalist data are restricted to *research grade* observations. In addition to representing non-cultivated plants, research-grade records reduce taxonomic uncertainty because the identifications are verified by at least two observers and meet a two-thirds consensus standard. We enforce similar identification standards in EDDMapS data by filtering to retain only records noted as being *verified* or having a *verification method*. In GBIF we require the identifier to be provided for observations that are not herbarium records.
+
+Although these databases provide the best publicly accessible georeferenced data, absence of records from any location could reflect data gaps rather than confirming true absence. Additional data from new surveys or less accessible databases would likely increase the number of known locations and could potentially expand the known geographic and ecological range of the species.
+
+After combining records from the four sources we removed duplicates by filtering for unique geographic coordinates. We then removed records of terrestrial species that were erroneously plotted by database users in areas coded as water in the National Landcover Database (NLCD) digital map (Commission for Environmental Cooperation 2024).
+
+Records within 300 m of each other were considered to represent the same occurrence and were merged. Coordinates of each occurrence are the centroids of latitude and longitude for all constituent records. These occurrences were intersected with the publicly available digital maps described below to answer questions in the Ecological Impacts section and the Current Distribution and Abundance section.
+
+To assess the conservation significance of natural communities in which the species is found (question 5c), we intersected occurrences with the Maryland Biodiversity Conservation Network (BioNet) shapefile (Maryland Department of Natural Resources 2018). BioNet uses presence of rare, threatened, endangered, or watch list species and the rarity of ecological communities to categorize land in five tiers: Tier 1) Critically Significant for Biodiversity Conservation, Tier 2) Extremely Significant for Biodiversity Conservation, Tier 3) Highly Significant for Biodiversity Conservation, Tier 4) Moderately Significant for Biodiversity Conservation, and Tier 5) Significant for Biodiversity Conservation. We counted species occurrences and the number of polygons supporting occurrences in each tier.
+
+Several datasets were used to answer questions in the Current Distribution and Abundance section. We quantified species range within Maryland by calculating the area of the minimum convex polygon (MCP) encompassing all Maryland occurrence centroids to answer question 6. To further refine understanding of the geographic distribution of the species in Maryland, we intersected occurrences with US Geological Survey (USGS) topographic quadrangle boundaries (Maryland Department of Natural Resources, 1998) and physiographic provinces (Maryland Department of Natural Resources, 2002) to address questions 7 and 8, respectively. To understand the diversity of ecological systems invaded in Maryland (questions 9a and 9b), we intersected occurrences with the National Land Cover Database map (Commission for Environmental Cooperation 2024) and with the USDA FIA map of Forest Type Groups (Burrill et al. 2024). These data sets are rasters that categorize 30 m x 30 m cells as particular forest type groups and land cover designations, respectively. All contiguous adjacent cells assigned to the same forest group by the FIA or land cover type in the NLCD were considered to be the same patch. We counted the number of occurrences in each separate patch to determine which land cover types have been invaded, how many distinct patches have been invaded, and the total acreage of those invaded patches.
+
+All GIS analyses were done in the R language and environment for statistical computing version 4.5.2 (R Core Team 2018). Results of the GIS analysis were integrated with the associated assessment protocol text using the Quarto scientific and technical publishing system (Allaire et al. 2025). Code used to complete the analyses and generate this assessment is available on GitHub at https://github.com/neellab-umd/MD-ipac-assessment-tool.
+
+# 3. Invasive Plant Species Status Assessment Results
+
+GBIF, iNaturalist, and EDDMapS databases were queried for `r if (params$genus_only) { paste0(species_list_simple, " ") } else { paste0("*", species_abb, "* ") }`records from Maryland and contiguous surrounding jurisdictions on `r format(search_date, "%B %d, %Y") %>% str_replace(" 0(\\d),", " \\1,")`.The FIA plot data exceeded the size allowed for automated queries from the USDA DataMart Website so all FIA plot location and invasive species data files for Maryland and contiguous surrounding jurisdictions were manually downloaded on February 23, 2025. These files include FIA plot data sampled through 2024, the most recent sampling period available at the time of this assessment. `r if (params$genus_only) {" After querying each database separately for each species, the resulting locations were combined for this assessment." } else { "" }`
+
+The searches and subsequent filtering yielded `r distinct_combined_points_sf %>% st_drop_geometry() %>% filter(state == "Maryland") %>% nrow() %>% format(big.mark = ",")` distinct `r paste0("*", species_abb, "*")` records in Maryland and `r distinct_combined_points_sf %>% st_drop_geometry() %>% filter(state != "Maryland") %>% nrow() %>% format(big.mark = ",")` records in surrounding jurisdictions (@tbl-summarize_occurrences_by_state). The records collapsed to `r merged_points_sf %>% st_drop_geometry() %>% filter(state == "Maryland") %>% nrow() %>% format(big.mark = ",")` `r paste0("*", species_abb, "*")` occurrences in Maryland and `r merged_points_sf %>% st_drop_geometry() %>% filter(state != "Maryland") %>% nrow() %>% format(big.mark = ",")` occurrences in the surrounding jurisdictions (@tbl-summarize_occurrences_by_state).
+
+```{r}
+#| label: set-up-tbl-caption-summarize_occurrences_by_state
+
+caption_for_summary_occurrence_by_state <- paste0("Number of *", species_abb, "* records and occurrences in Maryland, surrounding states, and the District of Columbia.")
+
+```
+
+```{r}
+#| label: tbl-summarize_occurrences_by_state
+#| tbl-cap: !expr caption_for_summary_occurrence_by_state
+ 
+detach("package:flextable", unload=TRUE)
+library(flextable)
+
+# Summarize occurrences by state and drop geometry
+summary_table <- merged_points_sf %>%
+  dplyr::mutate(state = factor(state, levels = 
+                                 c("Maryland", "Delaware", "District of Columbia", 
+                                   "Pennsylvania", "Virginia", "West Virginia"))) %>% 
+  dplyr::group_by(state) %>%
+  dplyr::summarise(
+    points = sum(num_points),
+    clusters = n()
+  ) %>%
+  sf::st_drop_geometry() %>%
+  flextable::flextable() %>%
+  # Set column headers
+  flextable::set_header_labels(
+    state = "State",
+    points = "Number of Records",
+    clusters = "Number of Occurrences"
+  ) %>%
+  
+  # Format numbers to have no decimal places
+  flextable::colformat_num(j = c("clusters", "points"), digits = 0) %>%
+  
+  # Adjust line spacing
+  flextable::line_spacing(space = 0.8, part = "header") %>%
+  flextable::line_spacing(space = 0.8, part = "body") %>%
+
+    padding(part = "header", padding.top = 1.5, padding.bottom = 1.5) %>%
+    padding(part = "body", padding.top = 1.5, padding.bottom = 1.5)  %>%
+
+  
+  # Apply theme and styling
+  flextable::theme_booktabs() %>%
+  flextable::font(fontname = "Aptos", part = "all") %>%
+  flextable::fontsize(size = 11, part = "all") %>% 
+  flextable::bold(part = "header") %>%
+  flextable::align(j = "state", align = "left", part = "body") %>%
+  flextable::align(j = c("clusters", "points"), 
+                   align = "right", part = "body") %>% 
+  flextable::align(j = c("state", "clusters", "points"),
+                   align = "center", part = "header") %>%
+  flextable::width(j = c(1), width = 1.6) %>% 
+  flextable::width(j = c(2), width = 1.5) %>%
+  flextable::width(j = c(3), width = 1.9) %>% 
+  set_table_properties(opts_word = list(split = FALSE, 
+                                          keep_with_next = TRUE, 
+                                          repeat_headers = TRUE))
+
+
+#count the number of rows to allow finding the last row no matter how many rows there are.
+n_rows <- nrow(summary_table$body$dataset)
+
+# Apply thick bottom border to the last row
+summary_table <- flextable::border(
+  x = summary_table,
+  i = n_rows,
+  border.bottom = thick_border,
+  part = "body"
+)
+
+# Print the flextable
+summary_table
+
+```
+
+## Ecological Impact
+
+```{r}
+#| label: assessor_instructions_ecological_impact
+#| output: asis
+
+if(params$mode == "generate") {
+  cat(paste0("[Assessor provides answers questions and subquestions 1-5b in the Supporting Evidence column based on a comprehensive literature search. Provide citations for the evidence in the text and add the references to the species-specific Literature Cited table. Supporting evidence for Question 5c comes from the GIS analysis - do not change the text or the grade. Assign grades for the remaining subquestions based on the evidence. Assign grades for the questions based on the highest grade for the constituent subquestions.]{custom-style=\"HighlightText\"}\n\n"))
+  
+}
+
+```
+
+Questions and subquestions from the Ecological Impact section of the Invasive Plant Species Status Assessment Protocol. Questions were graded for `r paste0("*", species_abb, "*")` using the provided supporting evidence. Grades are considered as the following: (A) = High, (B) = Medium, (C) = Low, (D) = Insignificant, (U) = Unknown.
+\
+
+```{r}
+#| label: q1_to_q5_question_table
+
+##flextable created above
+
+ft.1.to.5
+
+```
+\
+
+```{r}
+#| label: set-up-figure-caption-BioNetTier
+
+## Figure caption needs to only show Tiers that are in the map.
+
+tier_lookup <- tibble(
+  BioNetTier = paste("Tier", 1:5),
+  significance = c(
+    "Critically Significant",
+    "Extremely Significant",
+    "Highly Significant",
+    "Moderately Significant",
+    "Significant"
+  )
+)
+
+tiers_present <- BioNet_Output$bionet_tier_counts %>%
+  filter(num_occurrences > 0 & BioNetTier != "No Tier") %>%
+  distinct(BioNetTier) %>%
+  left_join(tier_lookup, by = "BioNetTier") %>%
+  arrange(BioNetTier)
+
+tier_text <- tiers_present %>%
+  mutate(
+    tier_label = paste0(
+      BioNetTier, ": ", significance
+    )
+  ) %>%
+  pull(tier_label) %>%
+  paste(collapse = ", ")
+
+bionet_figure_caption <- paste0("Number and percent of *", species_abb, "* occurrences across the five Maryland BioNet tiers and the number and percent polygons of each tier with the species. The tiers are classified in terms of their significance for biodiversity bonservation as follows: ", tier_text, ".")
+
+```
+
+```{r}
+#| label: fig-maryland-BioNetTier
+#| fig-cap: !expr bionet_figure_caption 
+
+
+BioNet_Output$bionet_map_with_table
+
+```
+
+```{r}
+#| label: summary_ecological_impact
+#| output: asis
+
+if(params$mode == "merge") {
+  cat("**Ecological Impact Summary.** *", species_name, "* received ", 
+      final.scores$inline.scores[["EI_sum_section_points"]], 
+      " total points for the Ecological Impacts section and thus received a subrank grade of ", 
+      final.scores$inline.scores[["EI_subrank"]], 
+      " (Appendix Table 1). This grade contributes ", 
+      final.scores$inline.scores[["EI_section_subrank_points"]], 
+      " subrank points towards the final I-Rank value (Appendix Table 1).\n\n", sep = "")
+}
+```
+
+## Current Distribution and Abundance
+
+```{r}
+#| label: assessor_instructions_CDA
+#| output: asis
+
+if(params$mode == "generate") {
+  cat(paste0("[Supporting evidence for Questions 6-9 comes from the GIS analysis. Do not change the text or the grades.]{custom-style=\"HighlightText\"}\n\n"))
+  
+}
+```
+
+Questions and subquestions for the Current Distribution and Abundance section of the Invasive Plant Species Assessment Protocol are answered from the GIS analysis. Questions were graded for `r paste0("*", species_abb, "*")` using the provided supporting evidence. Grades are considered as the following: (A) = High, (B) = Medium, (C) = Low, (D) = Insignificant, (U) = Unknown.
+\
+```{r}
+#| label: q6_to_q9_question_table
+
+ft.6.to.9
+
+```
+\
+```{r}
+#| label: mcp-set-up-caption
+
+mcp_caption <- paste0("Estimated range of *", species_abb, "* in Maryland based on the minimum convex polygon (MCP) encompassing all Maryland occurrences documented in the public databases searched for this assessment.") 
+
+```
+
+```{r}
+#| label: fig-minimum-convex-polygon
+#| fig-cap: !expr mcp_caption
+
+mcp$mcp_map
+
+```
+
+```{r}
+#| label: quad-density-set-up-caption
+
+quad_density_caption <- paste0(" Number of *", species_abb, "* occurrences in each USGS Quadrangle. White quadrangles indicate no records were documented in the public databases searched for this assessment.") 
+
+```
+
+```{r}
+#| label: fig-maryland-quad-density
+#| fig-cap: !expr quad_density_caption
+ 
+quad_density$quad_densities_plot
+
+```
+
+```{r}
+#| label: province-set-up-caption
+
+province_caption <- paste0(" Numbers and locations of *", species_abb, "* occurrences by physiographic province.") 
+
+```
+
+```{r}
+#| label: fig-maryland-provinces
+#| fig-cap: !expr province_caption 
+
+province$province_plot
+
+```
+
+```{r}
+#| label: FIA-set-up-tbl-caption
+
+fia_caption <- paste0("Summary of *", species_abb, "* occurrences across FIA forest groups.")
+
+```
+
+```{r}
+#| label: tbl-maryland-FIA-group
+#| tbl-cap: !expr fia_caption
+#| width: 100%
+
+#count the number of rows to allow finding the last row no matter how many rows there are.
+n_fia_rows <- nrow(points_fia_extract$group_table$body$dataset)
+
+# Apply thick bottom border to the last row
+points_fia_extract$group_table <- flextable::border(
+  x = points_fia_extract$group_table,
+  i = n_fia_rows,
+  border.bottom = thick_border,
+  part = "body"
+)
+
+# Print the flextable
+points_fia_extract$group_table
+
+```
+
+```{r}
+#| label: NLCD-set-up-tbl-caption
+
+nlcd_caption <- paste0("Distribution of  *", species_abb, "* occurrences across National Land Cover Database (NLCD) cover types.")
+
+```
+```{r}
+#| label: tbl-maryland_NLCD
+#| tbl-cap: !expr nlcd_caption
+
+#Get number of rows in NLCD table.
+n_NLCD_rows <- nrow(points_nlcd_extract$table$body$dataset)
+
+# Apply thick bottom border to the last row
+summary_table <- flextable::border(
+  x = points_nlcd_extract$table,
+  i = n_NLCD_rows,
+  border.bottom = thick_border,
+  part = "body"
+)
+
+points_nlcd_extract$table
+```
+
+
+```{r}
+#| label: summary_cda_impact
+#| output: asis
+
+if(params$mode == "merge") {
+  cat("**Current Distribution and Abundance Summary.** *", species_name, "* received ", 
+      final.scores$inline.scores[["CDA_sum_section_points"]], 
+      " total points for the Current Distribution and Abundance section and thus received a subrank grade of ", 
+      final.scores$inline.scores[["CDA_subrank"]], 
+      " (Appendix Table 1). This grade contributes ", 
+      final.scores$inline.scores[["CDA_section_subrank_points"]], 
+      " subrank points towards the final I-Rank value (Appendix Table 1).\n\n", sep = "")
+}
+```
+
+## Trend in Distribution and Abundance
+
+```{r}
+#| label: assessor_instructions_TDA
+#| output: asis
+
+if(params$mode == "generate") {
+  cat(paste0("[Assessor answers questions 10, 11 and 13 in the Supporting Evidence column based on a comprehensive literature search. Provide citations for the evidence in the text and add the references to the species-specific Literature Cited table. Evidence will be based on the literature search. Evidence for Question 12 comes from the GIS analysis. Do not change the text or the grade for that question. Assign grades for questions 10 and 11 based on the highest grade for the constituent subquestions. The grade for question 13 is assigned based on the number of subquestions that are answered yes: four or more yes answers results in (A) High, three results in (B) Medium, two results in (C) Low, and one or zero yes answers would result in (D) Insignificant.]{custom-style=\"HighlightText\"}\n\n"))
+  
+}
+
+```
+
+Questions and subquestions from the Trend in Distribution and Abundance section of the Invasive Plant Species Assessment Protocol. Questions were graded for `r paste0("*", species_abb, "*")` using the provided supporting evidence. Grades are considered as the following: (A) = High, (B) = Medium, (C) = Low, (D) = Insignificant, (U) = Unknown.
+\
+```{r}
+#| label: q10_to_q13_question_table
+
+ft.10.to.13
+
+```
+
+
+```{r}
+#| label: summary_tda_impact
+#| output: asis
+
+if(params$mode == "merge") {
+  cat("**Trend in Distribution and Abundance Summary.** *", species_name, "* received ", 
+      final.scores$inline.scores[["TDA_sum_section_points"]], 
+      " total points for the Trend in Distribution and Abundance section and thus received a subrank grade of ", 
+      final.scores$inline.scores[["TDA_subrank"]], 
+      " (Appendix Table 1). This grade contributes ", 
+      final.scores$inline.scores[["TDA_section_subrank_points"]], 
+      " subrank points towards the final I-Rank value (Appendix Table 1).\n\n", sep = "")
+}
+```
+
+## Management Difficulty and Human Impacts
+
+```{r}
+#| label: assessor_instructions_MD
+#| output: asis
+
+if(params$mode == "generate") {
+  cat(paste0("[Assessor answers questions and subquestions in the Supporting Evidence column based on a comprehensive literature search or documented management practices. Provide citations and add the references to the species=specific Literature Cited table. Assign grades for each questions based on the highest grade for the constituent subquestions.]{custom-style=\"HighlightText\"}\n\n"))
+  
+}
+```
+
+Questions and subquestions from the Management Difficulty and Human Impacts section of the Invasive Plant Species Status Assessment Protocol. Questions were graded for `r paste0("*", species_abb, "*")` using the provided supporting evidence. Grades are considered as the following: (A) = High, (B) = Medium, (C) = Low, (D) = Insignificant, (U) = Unknown.
+\
+```{r}
+#| label: q14_to_q18_question_table
+
+ft.14.to.18
+
+```
+
+```{r}
+#| label: summary_md_impact
+#| output: asis
+
+if(params$mode == "merge") {
+  cat("**Management Difficulty and Human Impacts Summary.** *", species_name, "* received ", 
+      final.scores$inline.scores[["MD_sum_section_points"]], 
+      " total points for the Management Difficulty and Human Impacts section and thus received a subrank grade of ", 
+      final.scores$inline.scores[["MD_subrank"]], 
+      " (Appendix Table 1). This grade contributes ", 
+      final.scores$inline.scores[["MD_section_subrank_points"]], 
+      " subrank points towards the final I-Rank value (Appendix Table 1).\n\n", sep = "")
+}
+```
+
+```{r}
+#| label: overall_summary
+#| output: asis
+
+if(params$mode == "merge") {
+   cat("# 4. Overall Summary and Recommendation\n\n",
+      "The Invasive Plant Species Status Assessment of *", species_abb, 
+      "* in Maryland resulted in the subrank scores of (", 
+      final.scores$inline.scores[["EI_subrank"]], ") ", 
+      final.scores$inline.scores[["EI_subrank_term"]], " in Ecological Impacts, (",
+      final.scores$inline.scores[["CDA_subrank"]], ") ",
+      final.scores$inline.scores[["CDA_subrank_term"]], " in Current Distribution and Abundance, (",
+      final.scores$inline.scores[["TDA_subrank"]], ") ",
+      final.scores$inline.scores[["TDA_subrank_term"]], " in Trend in Distribution and Abundance, and (",
+      final.scores$inline.scores[["MD_subrank"]], ") ",
+      final.scores$inline.scores[["MD_subrank_term"]], " in Management Difficulty and Human Impacts. ",
+      "Collectively these subrank scores contributed ", 
+      final.scores$inline.scores[["Total_section_subrank_points"]], " points, ",  # Added closing quote
+      "yielding an I-Rank of (", final.scores$inline.scores[["Total_irank"]], ") ",  # Added opening quote and opening paren
+      final.scores$inline.scores[["Total_irank_term"]], " (Appendix Table 1). ",
+      "Based on this I-Rank, IPAC recommends *", species_abb, "* ", 
+      if (final.scores$inline.scores[["Total_irank"]] %in% c("A", "B")) "as a Prohibited Invasive Plant." else "be added to the Watch List.",  # Fixed if/else syntax
+      "\n\n", sep = "")  # Added closing for cat() and closing brace for if
+}
+```
+
+# 5. Literature Cited
+
+## Literature Specific to the Assessed Species
+
+```{r}
+#| results: asis
+#| echo: false
+
+if (params$mode == "merge" && !is.null(evidence_list$literature_cited)) {
+  for (citation in evidence_list$literature_cited) {
+    cat(citation, "\n\n")
+  }
+} else {
+
+cat(paste0("[**Add the complete reference information for the sources you used to provide supporting evidence for the *", species_name, "* assessment to this table in alphabetical order. Place each citation in a separate row. Replace the example rows but do not modify the table title.**]{custom-style=\"HighlightText\"}\n\n"))
+
+cat("\n\n")
+
+ lit_placeholder <- data.frame(
+  `Literature Specific to the Assessed Species` = c(
+    paste0("Put your first reference here"),
+    paste0("Put your second reference here"),
+    paste0("add as many rows to the table as you need to hold all your references.")
+  ),
+  check.names = FALSE
+)
+
+# Create flextable
+lit_ft <- flextable(lit_placeholder) %>%
+  flextable::width(width = 6.5) %>%
+  flextable::align(align = "center", part = "header") %>%
+  flextable::align(align = "left", part = "body") %>%
+  flextable::theme_box()
+
+# Display it
+lit_ft 
+}
+
+```
+
+## Literature Common to All Assessments
+
+Allaire, J. J.; Teague, C.; Scheidegger, C.; Xie, Y.; Dervieux, C.; & Woodhull, G. (2025). Quarto: Multi-platform scientific and technical publishing system (Version 1.8.25). Available: https://quarto.org.
+
+Burrill, E.A.; DiTommaso, A.M.; Turner, J.A.; Pugh, S.A.; Christensen, G.; Kralicek, K.M.; Perry, C.J.; Lepine, L.C.; Walker, D.M.; Conkling, B.L. 2024. The Forest Inventory and Analysis Database, FIADB user guides, volume: database description (version 9.4), nationwide forest inventory (NFI). U.S. Department of Agriculture, Forest Service. 1016 p. Available: https://research.fs.usda.gov/understory/forest-inventory-and-analysis-database-user-guide-nfi.
+
+Commission for Environmental Cooperation. 2024. Land Cover of North America at 30 meters. Edition: 2.0. North American Land Change Monitoring System. Digital map. Available: http://www.cec.org/nalcms.
+
+Heap, I. n.d. The international herbicide-resistant weed database. Available: www.weedscience.org. Accessed July 30, 2025.
+
+Maryland Department of Natural Resources. 1998. Maryland USGS Topo Grids - Quad Grid. Digital map. Available: https://geodata.md.gov/imap/rest/services/Location/MD_USGSTopoGrids/FeatureServer/0.
+
+Maryland Department of Natural Resources. 2018. Maryland Biodiversity Conservation Network - BioNet. Updated May 12, 2025. Digital map. Available: https://data.imap.maryland.gov.
+
+Maryland Department of Natural Resources. 2002. Maryland Geology - Physiographic Provinces. Digital map. Available: https://geodata.md.gov/imap/rest/services/Geoscientific/MD_Geology/MapServer/1.
+
+Morse, L.E., J.M. Randall, N. Benton, R. Hiebert, and S. Lu. 2004. An invasive species assessment protocol: Evaluation of non-native plants for their impact on biodiversity. Version 1. NatureServe, Arlington, Virginia. 40 pages.
+
+R Core Team (2018). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. Available: https://www.R-project.org/.
+
+Taxonomic Data Working Group World Geographic Scheme for recording plant distributions committee. 2001. World Geographic Scheme for Recording Plant Distributions Standard. Biodiversity Information Standards. Available: http://www.tdwg.org/standards/109.
+
+# 6. Species Location Data Sources
+
+The R code for the query and spatial analysis were produced by Maile Neel (Professor at University of Maryland Department of Plant Science and Landscape Architecture & Department of Entomology; Director of the Norton-Brown Herbarium).
+
+Location data from Maryland, Delaware, Pennsylvania, West Virginia, Virginia, and Washington, DC. global distribution, and synonyms were downloaded as follows.
+
+Early Detection & Distribution Mapping System (EDDMapS). The University of Georgia ‐ Center for Invasive Species and Ecosystem Health. http://www.eddmaps.org/. All verified records with geographic coordinates observed after January 1, 1901 were obtained on `r format(search_date, "%B %d, %Y")`.
+
+Global Biodiversity Information Facility (GBIF). https://www.gbif.org. Locations of observations of wild growing `r paste0("*", species_abb, "* ")` (*i.e.*, the basisofrecord field was not "Living Specimen") were obtained on `r format(search_date, " %B %d, %Y")`. Counts of records from all countries and U.S. states were also obtained on this date.
+
+iNaturalist Community. https://www.inaturalist.org. Research Grade observations of `r paste0("*", species_abb, "* ")` were exported on `r format(search_date, "%B %d, %Y")`. Records were manually reviewed to confirm that they were not planted specimens and that the identifications were correct. If iNaturalist records were edited, the export was repeated to capture the corrected data. Counts of records from all U.S. states were also obtained on the search date.
+
+Trefle Global Plant Database. https://trefle.io/. Synonyms and native range of `r paste0("*", species_abb, "* ")` were obtained on `r format(search_date, " %B %d, %Y")`.
+
+USDA Forest Service. 2019. Forest Inventory and Analysis database. St. Paul, MN: USDA Forest Service, Northern Research Station. https://doi.org/10.2737/RDS-2001-FIADB. Data for all FIA plots in Maryland and contiguous surrounding jurisdictions were downloaded in February 2025, capturing the most recently available measurements from the 2024 field season. The invasive species subplots were searched for observations of `r paste0("*", species_abb, "*")`.
+
+
+# 7. Additional Information
+
+This assessment was provided by the Maryland Invasive Plants Advisory Committee. For more information on invasive plant regulation in Maryland, as well as the current list of species on the Maryland Prohibited Plants list, please visit: https://mda.maryland.gov/plants-pests/pages/maryland_invasive_plants_prevention_and_control.aspx 
+
+```{r}
+#| output: asis
+#| echo: false
+
+if(params$mode == "merge") {
+  cat("{{< pagebreak >}}\n")
+}
+
+```
+
+
+`r if(params$mode == "merge") "# Appendix"`
+
+`r if(params$mode == "merge") paste0("Appendix Table 1. I-Rank calculation for *", species_abb, "*. Points assigned for the grades for each question in the four sections of the Invasive Plant Status Assessment Protocol are summarized here. Total points within sections are compared to their subrank intervals to determine the subrank grade. Subrank grades are then are assigned point values. The total subrank is compared to the I-Rank intervals to determine the I-Rank for the species.\n")`
+
+
+```{r}
+#| label: appendix-table
+
+if(params$mode == "merge" && !is.null(final.scores$appendix.table)) {
+  final.scores$appendix.table
+} 
+```
+
+
+
