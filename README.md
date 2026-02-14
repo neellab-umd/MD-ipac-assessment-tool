@@ -109,7 +109,7 @@ cd md-invasive-plant-protocol
 
 **Download folders and files from Zenodo:**
 
-Spatial data files and folders that are too large for github need to be downloaded from the [Zenodo repository](https://zenodo.org/records/18641201). This zip file needs to be unzipped into the IPAC assessment project such that all folders are just below the parent directory, not within the folder IPAC_data_files.  See the project structure below.
+Spatial data files and folders that are too large for github need to be downloaded from the [Zenodo repository](https://zenodo.org/records/18641201). The zip file in this repository needs to be unzipped into the IPAC assessment project such that all folders are just below the parent directory, not within the folder IPAC_data_files.  See the project organization below.
 
 **Project Organization:**
 
